@@ -60,6 +60,19 @@ export function loadTrustedSetup(precompute: number, filePath?: string): void;
 export function blobToKzgCommitment(blob: Blob): KZGCommitment;
 
 /**
+ * Convert a blob to a KZG commitment.
+ *
+ * @param {Blob} blob - The blob representing the polynomial to be committed to
+ *
+ * @param {Bytes32} commitmentBytes - Commitment to verify
+ *
+ * @returns {Bytes32} - The resulting challenge
+ *
+ * @throws {TypeError} - For invalid arguments or failure of the native library
+ */
+export function computeChallenge(blob: Blob, commitmentBytes: Bytes48): Bytes32;
+
+/**
  * Compute KZG proof for polynomial in Lagrange form at position z.
  *
  * @param {Blob}    blob - The blob (polynomial) to generate a proof for

@@ -78,6 +78,8 @@ C_KZG_RET verify_blob_kzg_proof_batch(
     const KZGSettings *s
 );
 
+void compute_challenge(fr_t *eval_challenge_out, const Blob *blob, const g1_t *commitment);
+
 #ifdef __cplusplus
 }
 #endif

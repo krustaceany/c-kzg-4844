@@ -304,6 +304,42 @@ Napi::Value ComputeKzgProof(const Napi::CallbackInfo &info) {
 }
 
 /**
+ * Given a blob, return the Fiat-Shamir challenge that is used to verify it
+ * against the commitment.
+ *
+ * @param[in] {Blob}    blob - The blob (polynomial) to generate a proof for
+ * @param[in] {Bytes48} commitmentBytes - Commitment to verify
+ *
+ * @return {Bytes32} - The resulting challenge
+ *
+ * @throws {TypeError} - for invalid arguments or failure of the native library
+ */
+Napi::Value ComputeChallenge(const Napi::CallbackInfo &info) {
+    Napi::Env env = info.Env();
+    Blob *blob = get_blob(env, info[0]);
+    if (blob == nullptr) {
+        return env.Null();
+    }
+    Bytes48 *commitment_bytes = get_bytes48(env, info[1], "commitmentBytes");
+    if (commitment_bytes == nullptr) {
+        return env.Null();
+    }
+    g1_t commitment_g1;
+    bytes_to_kzg_commitment(&commitment_g1, commitment_bytes);
+    fr_t evaluation_challenge_fr;
+    compute_challenge(&evaluation_challenge_fr, blob, &commitment_g1);
+
+    Bytes32 challenge_bytes;
+    bytes_from_bls_field(&challenge_bytes, &evaluation_challenge_fr);
+
+    return Napi::Buffer<uint8_t>::Copy(
+        env,
+        reinterpret_cast<uint8_t *>(&challenge_bytes),
+        BYTES_PER_FIELD_ELEMENT
+    );
+}
+
+/**
  * Given a blob, return the KZG proof that is used to verify it against the
  * commitment.
  *
@@ -924,6 +960,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     );
     exports["blobToKzgCommitment"] = Napi::Function::New(
         env, BlobToKzgCommitment, "blobToKzgCommitment"
+    );
+    exports["computeChallenge"] = Napi::Function::New(
+        env, ComputeChallenge, "computeChallenge"
     );
     exports["computeKzgProof"] = Napi::Function::New(
         env, ComputeKzgProof, "computeKzgProof"
